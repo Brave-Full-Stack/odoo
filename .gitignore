@@ -51,3 +51,9 @@ package.json
 /man/
 /share/
 /src/
+
+# Local credentials and environment files (DO NOT COMMIT TO EXTERNAL REPOS)
+CREDENTIALS.md
+.env
+.env.local
+.env.*.local

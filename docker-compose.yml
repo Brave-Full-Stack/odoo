@@ -9,6 +9,8 @@ services:
       POSTGRES_USER: odoo
       POSTGRES_PASSWORD: odoo
       PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"  # Using 5433 to avoid conflict with local PostgreSQL
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
     networks:
@@ -20,6 +22,23 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: odoo-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - odoo-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
   odoo:
     build:
       context: .
@@ -29,9 +48,9 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8069:8069"
-      - "8071:8071"
-      - "8072:8072"
+      - "8070:8069"  # Using 8070 to avoid conflict with local Odoo
+      - "8073:8071"
+      - "8074:8072"
     environment:
       - HOST=postgres
       - USER=odoo
@@ -57,6 +76,8 @@ volumes:
   odoo-db-data:
     driver: local
   odoo-logs:
+    driver: local
+  pgadmin-data:
     driver: local
 
 networks:
