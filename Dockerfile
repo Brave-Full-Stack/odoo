@@ -13,6 +13,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Build tools (required for pip packages)
+    build-essential \
+    gcc \
+    g++ \
+    make \
     # Core dependencies
     ca-certificates \
     curl \
