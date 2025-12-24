@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odoo
+  namespace: odoo
+  labels:
+    app: odoo
+    tier: application
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: odoo
+  template:
+    metadata:
+      labels:
+        app: odoo
+        tier: application
+    spec:
+      imagePullSecrets:
+      - name: harbor-registry
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z postgres-service 5432; do echo waiting for db; sleep 2; done;']
+      containers:
+      - name: odoo
+        image: harbor.example.com/odoo/odoo:19.0-latest  # Change to your Harbor registry
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8069
+          name: http
+          protocol: TCP
+        - containerPort: 8071
+          name: longpolling
+          protocol: TCP
+        - containerPort: 8072
+          name: http-alt
+          protocol: TCP
+        env:
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: odoo-config
+              key: DB_HOST
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: odoo-config
+              key: DB_PORT
+        - name: USER
+          valueFrom:
+            configMapKeyRef:
+              name: odoo-config
+              key: DB_USER
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: odoo-secrets
+              key: DB_PASSWORD
+        - name: ODOO_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: odoo-secrets
+              key: ODOO_ADMIN_PASSWORD
+        volumeMounts:
+        - name: odoo-filestore
+          mountPath: /var/lib/odoo
+        - name: odoo-logs
+          mountPath: /var/log/odoo
+        - name: odoo-addons
+          mountPath: /opt/odoo/addons
+          readOnly: true
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /web/health
+            port: 8069
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /web/health
+            port: 8069
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: odoo-filestore
+        persistentVolumeClaim:
+          claimName: odoo-filestore-pvc
+      - name: odoo-logs
+        persistentVolumeClaim:
+          claimName: odoo-logs-pvc
+      - name: odoo-addons
+        emptyDir: {}  # Replace with ConfigMap or git-sync for custom addons
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: odoo-service
+  namespace: odoo
+  labels:
+    app: odoo
+    tier: application
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8069
+    targetPort: 8069
+    protocol: TCP
+    name: http
+  - port: 8071
+    targetPort: 8071
+    protocol: TCP
+    name: longpolling
+  - port: 8072
+    targetPort: 8072
+    protocol: TCP
+    name: http-alt
+  selector:
+    app: odoo
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

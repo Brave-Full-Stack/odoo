@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: odoo
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - pvc.yaml
+  - postgres-deployment.yaml
+  - odoo-deployment.yaml
+  - pgadmin-deployment.yaml
+  - ingress.yaml
+  - hpa.yaml
+
+commonLabels:
+  app.kubernetes.io/name: odoo
+  app.kubernetes.io/instance: odoo-production
+  app.kubernetes.io/version: "19.0"
+  app.kubernetes.io/component: erp
+  app.kubernetes.io/part-of: odoo-stack
+  app.kubernetes.io/managed-by: kustomize

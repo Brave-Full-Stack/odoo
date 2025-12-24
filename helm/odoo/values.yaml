@@ -1,0 +1,137 @@
+# Default values for Odoo Helm chart
+replicaCount: 2
+
+image:
+  repository: harbor.example.com/odoo/odoo
+  pullPolicy: IfNotPresent
+  tag: "19.0-latest"
+
+imagePullSecrets:
+  - name: harbor-registry
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8069
+  longpollingPort: 8071
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+  hosts:
+    - host: odoo.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: odoo-tls
+      hosts:
+        - odoo.example.com
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Odoo specific configuration
+odoo:
+  adminPassword: "changeme"
+  workers: 4
+  maxCronThreads: 2
+  proxyMode: true
+  limitMemorySoft: 2147483648
+  limitMemoryHard: 2684354560
+  limitTimeCpu: 600
+  limitTimeReal: 1200
+
+# Database configuration
+postgresql:
+  enabled: true
+  auth:
+    username: odoo
+    password: changeme
+    database: postgres
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+      requests:
+        memory: 256Mi
+        cpu: 250m
+
+# Persistent storage
+persistence:
+  enabled: true
+  filestore:
+    size: 10Gi
+    storageClass: standard
+  logs:
+    size: 5Gi
+    storageClass: standard
+
+# pgAdmin configuration
+pgadmin:
+  enabled: true
+  image:
+    repository: dpage/pgadmin4
+    tag: latest
+  env:
+    email: admin@example.com
+    password: changeme
+  persistence:
+    size: 1Gi
+  ingress:
+    enabled: true
+    host: pgadmin.odoo.example.com
+
+# Monitoring
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s

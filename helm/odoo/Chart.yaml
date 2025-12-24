@@ -1,0 +1,23 @@
+apiVersion: v2
+name: odoo
+description: A Helm chart for Odoo 19.0 ERP System
+type: application
+version: 1.0.0
+appVersion: "19.0"
+keywords:
+  - odoo
+  - erp
+  - crm
+  - business
+home: https://www.odoo.com
+sources:
+  - https://github.com/odoo/odoo
+maintainers:
+  - name: Brave Full Stack
+    email: admin@example.com
+icon: https://www.odoo.com/web/image/website/1/logo
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
