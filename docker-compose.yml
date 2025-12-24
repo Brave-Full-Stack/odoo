@@ -1,3 +1,7 @@
+# Odoo 19.0 Docker Compose - Containerized Setup
+# ⚠️ SECURITY NOTE: Default passwords for development only!
+# For production: Use Docker secrets or environment variables from .env file
+
 version: '3.8'
 
 services:
