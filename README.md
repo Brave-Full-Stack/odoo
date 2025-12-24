@@ -1,37 +1,115 @@
-# Odoo
+# Odoo 19.0 - Local Development Branch
 
-[![Build Status](https://runbot.odoo.com/runbot/badge/flat/1/master.svg)](https://runbot.odoo.com/runbot)
-[![Tech Doc](https://img.shields.io/badge/master-docs-875A7B.svg?style=flat&colorA=8F8F8F)](https://www.odoo.com/documentation/master)
-[![Help](https://img.shields.io/badge/master-help-875A7B.svg?style=flat&colorA=8F8F8F)](https://www.odoo.com/forum/help-1)
-[![Nightly Builds](https://img.shields.io/badge/master-nightly-875A7B.svg?style=flat&colorA=8F8F8F)](https://nightly.odoo.com/)
+> **Branch**: `Odoo-19.0-local-dev`  
+> **Purpose**: Local VM development and testing environment  
+> **Database**: PostgreSQL (local, port 5432, database: `odoo19`)  
+> **Port**: 8069
 
-Odoo is a suite of web based open source business apps.
+This branch contains the local development setup for Odoo 19.0, running directly on the VM without Docker containers.
 
-The main Odoo Apps include an [Open Source CRM](https://www.odoo.com/page/crm),
-[Website Builder](https://www.odoo.com/app/website),
-[eCommerce](https://www.odoo.com/app/ecommerce),
-[Warehouse Management](https://www.odoo.com/app/inventory),
-[Project Management](https://www.odoo.com/app/project),
-[Billing &amp; Accounting](https://www.odoo.com/app/accounting),
-[Point of Sale](https://www.odoo.com/app/point-of-sale-shop),
-[Human Resources](https://www.odoo.com/app/employees),
-[Marketing](https://www.odoo.com/app/social-marketing),
-[Manufacturing](https://www.odoo.com/app/manufacturing),
-[...](https://www.odoo.com/)
+## Quick Start
 
-Odoo Apps can be used as stand-alone applications, but they also integrate seamlessly so you get
-a full-featured [Open Source ERP](https://www.odoo.com) when you install several Apps.
+### Start Odoo (Recommended)
 
-## Getting started with Odoo
+```bash
+./start-odoo.sh
+```
 
-For a standard installation please follow the [Setup instructions](https://www.odoo.com/documentation/master/administration/install/install.html)
-from the documentation.
+This script automatically:
+- Checks PostgreSQL is running
+- Verifies port 8069 is available
+- Connects to existing database `odoo19`
+- Starts Odoo in dev mode
 
-To learn the software, we recommend the [Odoo eLearning](https://www.odoo.com/slides),
-or [Scale-up, the business game](https://www.odoo.com/page/scale-up-business-game).
-Developers can start with [the developer tutorials](https://www.odoo.com/documentation/master/developer/howtos.html).
+### Access Points
 
-## Security
+- **Backend Dashboard**: http://localhost:8069/web
+- **Website Frontend**: http://localhost:8069
+- **Database Manager**: http://localhost:8069/web/database/manager
 
-If you believe you have found a security issue, check our [Responsible Disclosure page](https://www.odoo.com/security-report)
-for details and get in touch with us via email.
+### Default Credentials
+
+- **Username**: admin
+- **Password**: admin
+
+## Manual Start
+
+If you prefer to start Odoo manually:
+
+```bash
+python3 odoo-bin -d odoo19 --dev=all
+```
+
+## Development Features
+
+This local development branch includes:
+
+- ✅ Dev mode enabled (`--dev=all`) for auto-reload
+- ✅ All addons from `addons/` directory
+- ✅ PostgreSQL v14 local database
+- ✅ Data persistence (survives restarts)
+- ✅ Full debug capabilities
+
+## Database Information
+
+**Database Name**: `odoo19`  
+**Host**: localhost  
+**Port**: 5432  
+**User**: brave (or your system user)
+
+All your work (modules, data, configurations) is stored in this database and persists across restarts.
+
+## File Locations
+
+- **Filestore**: `~/.local/share/Odoo/filestore/odoo19/`
+- **Logs**: Terminal output (or configure in odoo.conf)
+- **Addons**: `./addons/` and `./odoo/addons/`
+
+## Branch Strategy
+
+This repository uses a 4-branch workflow:
+
+1. **19.0** - Reference branch (tracks upstream Odoo)
+2. **Odoo-19.0-local-dev** - This branch (local VM development)
+3. **Odoo-19.0-containerized** - Docker setup (port 8070)
+4. **Odoo-19.0-microservices** - Kubernetes production manifests
+
+## Troubleshooting
+
+### Port Already in Use
+
+```bash
+sudo netstat -tlnp | grep :8069
+# Kill the process if needed
+kill -9 <PID>
+```
+
+### PostgreSQL Not Running
+
+```bash
+sudo systemctl status postgresql
+sudo systemctl start postgresql
+```
+
+### Clear Browser Cache
+
+If you see old assets or styles, clear browser cache: `Ctrl+Shift+Del`
+
+## Contributing to This Branch
+
+This branch is for local development and testing. Once features are stable:
+
+1. Test thoroughly in this environment
+2. Merge to `Odoo-19.0-containerized` for Docker testing
+3. Deploy via `Odoo-19.0-microservices` for production
+
+---
+
+## Original Odoo Documentation
+
+For official Odoo documentation, see [README-ODOO-ORIGINAL.md](README-ODOO-ORIGINAL.md)
+
+- [Official Setup Instructions](https://www.odoo.com/documentation/19.0/administration/install/install.html)
+- [Odoo eLearning](https://www.odoo.com/slides)
+- [Developer Tutorials](https://www.odoo.com/documentation/19.0/developer/howtos.html)
+- [Security Issues](https://www.odoo.com/security-report)
