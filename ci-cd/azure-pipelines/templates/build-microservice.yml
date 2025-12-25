@@ -1,0 +1,111 @@
+# Reusable template for building individual microservices
+parameters:
+  - name: serviceName
+    type: string
+  - name: servicePort
+    type: number
+  - name: harborRegistry
+    type: string
+  - name: harborProject
+    type: string
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.11'
+    inputs:
+      versionSpec: '3.11'
+
+  - task: Docker@2
+    displayName: 'Login to Harbor Registry'
+    inputs:
+      command: 'login'
+      containerRegistry: 'harbor-connection'
+
+  - script: |
+      cd microservices/${{ parameters.serviceName }}
+      
+      # Install dependencies
+      pip install -r requirements.txt
+      pip install pytest pytest-cov pylint flake8
+      
+      # Run linting
+      pylint **/*.py || true
+      flake8 . --max-line-length=120 --count --statistics
+      
+      # Run unit tests
+      pytest tests/ --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml
+    displayName: 'Test ${{ parameters.serviceName }}'
+    continueOnError: false
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
+    condition: always()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'microservices/${{ parameters.serviceName }}/test-results.xml'
+      testRunTitle: '${{ parameters.serviceName }} Tests'
+
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish Coverage'
+    condition: always()
+    inputs:
+      codeCoverageTool: 'Cobertura'
+      summaryFileLocation: 'microservices/${{ parameters.serviceName }}/coverage.xml'
+
+  - task: Docker@2
+    displayName: 'Build Docker Image'
+    inputs:
+      command: 'build'
+      repository: '${{ parameters.harborProject }}/${{ parameters.serviceName }}'
+      dockerfile: 'microservices/${{ parameters.serviceName }}/Dockerfile'
+      tags: |
+        $(Build.BuildId)
+        $(Build.SourceBranchName)-latest
+        latest
+      arguments: |
+        --build-arg SERVICE_NAME=${{ parameters.serviceName }}
+        --build-arg SERVICE_PORT=${{ parameters.servicePort }}
+        --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        --build-arg VCS_REF=$(Build.SourceVersion)
+        --label org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        --label org.opencontainers.image.revision=$(Build.SourceVersion)
+        --label org.opencontainers.image.version=$(Build.BuildId)
+
+  - task: Docker@2
+    displayName: 'Push to Harbor'
+    inputs:
+      command: 'push'
+      repository: '${{ parameters.harborProject }}/${{ parameters.serviceName }}'
+      containerRegistry: 'harbor-connection'
+      tags: |
+        $(Build.BuildId)
+        $(Build.SourceBranchName)-latest
+        latest
+
+  - script: |
+      # Install Trivy
+      wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+      echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+      sudo apt-get update
+      sudo apt-get install trivy -y
+      
+      # Scan image
+      trivy image --severity HIGH,CRITICAL \
+        --exit-code 0 \
+        --format json \
+        --output trivy-report-${{ parameters.serviceName }}.json \
+        ${{ parameters.harborRegistry }}/${{ parameters.harborProject }}/${{ parameters.serviceName }}:$(Build.BuildId)
+    displayName: 'Security Scan with Trivy'
+    continueOnError: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Security Report'
+    inputs:
+      pathToPublish: 'trivy-report-${{ parameters.serviceName }}.json'
+      artifactName: 'security-reports'
+
+  - script: |
+      echo "✅ ${{ parameters.serviceName }} built successfully"
+      echo "📦 Image: ${{ parameters.harborRegistry }}/${{ parameters.harborProject }}/${{ parameters.serviceName }}:$(Build.BuildId)"
+      echo "🔒 Port: ${{ parameters.servicePort }}"
+    displayName: 'Build Summary'

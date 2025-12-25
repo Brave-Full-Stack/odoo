@@ -1,0 +1,382 @@
+# Azure DevOps Infrastructure Pipeline
+# Manages Terraform/Bicep deployments for Azure/AWS resources
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - terraform/**
+      - helm/**
+
+pr: none  # Only run on direct commits to main
+
+variables:
+  - group: azure-credentials
+  - group: aws-credentials
+  - name: terraformVersion
+    value: '1.6.0'
+
+stages:
+  # ============================================================
+  # Stage 1: Validate Infrastructure Code
+  # ============================================================
+  - stage: ValidateInfra
+    displayName: 'Validate Infrastructure'
+    jobs:
+      - job: TerraformValidate
+        displayName: 'Terraform Validation'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - script: |
+              cd terraform/
+              terraform init -backend=false
+              terraform validate
+              terraform fmt -check
+            displayName: 'Terraform Validate & Format Check'
+
+          - script: |
+              # Install tfsec
+              wget -qO - https://github.com/aquasecurity/tfsec/releases/download/v1.28.1/tfsec-linux-amd64 > tfsec
+              chmod +x tfsec
+              
+              # Scan Terraform
+              ./tfsec terraform/ --format=junit > tfsec-results.xml
+            displayName: 'Security Scan with tfsec'
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            displayName: 'Publish tfsec Results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'tfsec-results.xml'
+
+      - job: HelmValidate
+        displayName: 'Helm Chart Validation'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: HelmInstaller@1
+            displayName: 'Install Helm'
+            inputs:
+              helmVersionToInstall: '3.12.0'
+
+          - script: |
+              # Lint all Helm charts
+              for chart in helm/*/; do
+                echo "Linting $chart..."
+                helm lint "$chart"
+              done
+            displayName: 'Helm Lint'
+
+          - script: |
+              # Template and validate
+              helm template odoo ./helm/odoo-microservices \
+                --values ./helm/odoo-microservices/values-dev.yaml \
+                --output-dir ./rendered-manifests
+              
+              # Validate with kubeval
+              wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+              tar xf kubeval-linux-amd64.tar.gz
+              ./kubeval ./rendered-manifests/**/*.yaml
+            displayName: 'Validate Kubernetes Manifests'
+
+  # ============================================================
+  # Stage 2: Plan Infrastructure Changes
+  # ============================================================
+  - stage: PlanInfra
+    displayName: 'Plan Infrastructure'
+    dependsOn: ValidateInfra
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Terraform Plan'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: AzureCLI@2
+            displayName: 'Configure Azure Backend'
+            inputs:
+              azureSubscription: 'azure-service-connection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Initialize Terraform with Azure backend
+                cd terraform/
+                terraform init \
+                  -backend-config="storage_account_name=$(TF_STATE_STORAGE_ACCOUNT)" \
+                  -backend-config="container_name=$(TF_STATE_CONTAINER)" \
+                  -backend-config="key=odoo-microservices.tfstate" \
+                  -backend-config="access_key=$(TF_STATE_ACCESS_KEY)"
+
+          - script: |
+              cd terraform/
+              
+              # Create plan
+              terraform plan \
+                -var="environment=production" \
+                -var="region=eastus" \
+                -var="project_name=odoo-microservices" \
+                -out=tfplan
+              
+              # Show plan
+              terraform show -json tfplan > tfplan.json
+            displayName: 'Create Terraform Plan'
+            env:
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Terraform Plan'
+            inputs:
+              targetPath: 'terraform/tfplan'
+              artifactName: 'terraform-plan'
+
+          - script: |
+              # Generate cost estimate
+              pip install infracost
+              infracost breakdown --path terraform/ --format json > cost-estimate.json
+              infracost breakdown --path terraform/ --format table
+            displayName: 'Cost Estimation'
+            continueOnError: true
+            env:
+              INFRACOST_API_KEY: $(INFRACOST_API_KEY)
+
+  # ============================================================
+  # Stage 3: Apply Infrastructure (Production)
+  # ============================================================
+  - stage: ApplyInfra
+    displayName: 'Apply Infrastructure'
+    dependsOn: PlanInfra
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: ApplyTerraform
+        displayName: 'Apply Terraform Changes'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'infrastructure-production'  # Requires manual approval
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: TerraformInstaller@0
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download Terraform Plan'
+                  inputs:
+                    artifactName: 'terraform-plan'
+                    targetPath: '$(Pipeline.Workspace)/terraform-plan'
+
+                - task: AzureCLI@2
+                  displayName: 'Apply Terraform'
+                  inputs:
+                    azureSubscription: 'azure-service-connection'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      cd terraform/
+                      
+                      # Initialize
+                      terraform init \
+                        -backend-config="storage_account_name=$(TF_STATE_STORAGE_ACCOUNT)" \
+                        -backend-config="container_name=$(TF_STATE_CONTAINER)" \
+                        -backend-config="key=odoo-microservices.tfstate" \
+                        -backend-config="access_key=$(TF_STATE_ACCESS_KEY)"
+                      
+                      # Apply plan
+                      terraform apply -auto-approve $(Pipeline.Workspace)/terraform-plan/tfplan
+                      
+                      # Output important values
+                      terraform output -json > terraform-outputs.json
+                  env:
+                    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+                    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+                    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+                    ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+                - task: PublishPipelineArtifact@1
+                  displayName: 'Publish Terraform Outputs'
+                  inputs:
+                    targetPath: 'terraform/terraform-outputs.json'
+                    artifactName: 'terraform-outputs'
+
+  # ============================================================
+  # Stage 4: Deploy Helm Charts
+  # ============================================================
+  - stage: DeployHelm
+    displayName: 'Deploy Helm Charts'
+    dependsOn: ApplyInfra
+    jobs:
+      - deployment: DeployHelmCharts
+        displayName: 'Deploy to Kubernetes'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'kubernetes-production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: HelmInstaller@1
+                  displayName: 'Install Helm'
+                  inputs:
+                    helmVersionToInstall: '3.12.0'
+
+                - task: Kubernetes@1
+                  displayName: 'Add Helm Repos'
+                  inputs:
+                    command: 'login'
+                    kubernetesServiceEndpoint: 'k8s-prod-connection'
+
+                - script: |
+                    # Add required Helm repositories
+                    helm repo add bitnami https://charts.bitnami.com/bitnami
+                    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                    helm repo add grafana https://grafana.github.io/helm-charts
+                    helm repo update
+                  displayName: 'Add Helm Repositories'
+
+                - script: |
+                    # Deploy Odoo microservices
+                    helm upgrade --install odoo-microservices ./helm/odoo-microservices \
+                      --namespace odoo-prod \
+                      --create-namespace \
+                      --values ./helm/odoo-microservices/values-production.yaml \
+                      --set image.tag=$(Build.BuildId) \
+                      --wait \
+                      --timeout 15m
+                  displayName: 'Deploy Odoo Microservices'
+
+                - script: |
+                    # Deploy monitoring stack
+                    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+                      --namespace monitoring \
+                      --create-namespace \
+                      --values ./helm/monitoring/prometheus-values.yaml \
+                      --wait
+                  displayName: 'Deploy Prometheus & Grafana'
+
+                - script: |
+                    # Deploy service mesh (Istio)
+                    helm upgrade --install istio-base istio/base \
+                      --namespace istio-system \
+                      --create-namespace
+                    
+                    helm upgrade --install istiod istio/istiod \
+                      --namespace istio-system \
+                      --wait
+                  displayName: 'Deploy Istio Service Mesh'
+
+  # ============================================================
+  # Stage 5: Post-Deployment Configuration
+  # ============================================================
+  - stage: PostConfig
+    displayName: 'Post-Deployment Configuration'
+    dependsOn: DeployHelm
+    jobs:
+      - job: ConfigureDNS
+        displayName: 'Configure DNS & SSL'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Update DNS Records'
+            inputs:
+              azureSubscription: 'azure-service-connection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Get LoadBalancer IP
+                EXTERNAL_IP=$(kubectl get svc -n odoo-prod odoo-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+                
+                # Update Azure DNS
+                az network dns record-set a add-record \
+                  --resource-group $(DNS_RESOURCE_GROUP) \
+                  --zone-name $(DNS_ZONE) \
+                  --record-set-name odoo \
+                  --ipv4-address $EXTERNAL_IP
+
+          - script: |
+              # Install cert-manager for SSL
+              kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+              
+              # Wait for cert-manager
+              kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=300s
+              
+              # Apply Let's Encrypt issuer
+              kubectl apply -f k8s/cert-manager/letsencrypt-issuer.yaml
+            displayName: 'Setup SSL Certificates'
+
+      - job: ConfigureMonitoring
+        displayName: 'Configure Monitoring Alerts'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              # Apply Prometheus rules
+              kubectl apply -f k8s/monitoring/prometheus-rules.yaml -n monitoring
+              
+              # Configure Grafana dashboards
+              kubectl apply -f k8s/monitoring/grafana-dashboards.yaml -n monitoring
+              
+              # Setup Alertmanager
+              kubectl apply -f k8s/monitoring/alertmanager-config.yaml -n monitoring
+            displayName: 'Deploy Monitoring Configuration'
+
+      - job: BackupConfiguration
+        displayName: 'Configure Backups'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              # Deploy Velero for cluster backups
+              helm upgrade --install velero vmware-tanzu/velero \
+                --namespace velero \
+                --create-namespace \
+                --values helm/velero/values.yaml \
+                --wait
+              
+              # Create backup schedule
+              velero schedule create daily-backup \
+                --schedule="0 2 * * *" \
+                --include-namespaces odoo-prod \
+                --ttl 720h
+            displayName: 'Setup Velero Backups'
+
+      - job: NotifySuccess
+        displayName: 'Deployment Notifications'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              # Send deployment notification
+              curl -X POST $(SLACK_WEBHOOK_URL) \
+                -H 'Content-Type: application/json' \
+                -d '{
+                  "text": "🚀 Infrastructure Deployment Complete!",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "*Odoo Microservices Infrastructure Deployed*\n✅ Terraform Applied\n✅ Kubernetes Configured\n✅ Monitoring Active\n✅ SSL Enabled"
+                      }
+                    }
+                  ]
+                }'
+            displayName: 'Send Slack Notification'

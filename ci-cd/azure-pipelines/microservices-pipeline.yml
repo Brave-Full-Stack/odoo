@@ -1,0 +1,522 @@
+# Azure DevOps Multi-Service Pipeline for Odoo Microservices
+# This pipeline builds and deploys all microservices independently
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+      - Odoo-19.0-microservices
+  paths:
+    include:
+      - microservices/**
+      - shared/**
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+      - Odoo-19.0-microservices
+
+variables:
+  - group: odoo-secrets
+  - group: harbor-credentials
+  - name: harborRegistry
+    value: 'harbor.example.com'
+  - name: harborProject
+    value: 'odoo-microservices'
+  - name: kubernetesNamespace
+    value: 'odoo'
+
+stages:
+  # ============================================================
+  # Stage 1: Build & Test Shared Libraries
+  # ============================================================
+  - stage: BuildShared
+    displayName: 'Build Shared Libraries'
+    jobs:
+      - job: BuildSharedLib
+        displayName: 'Build and Test Shared Code'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UsePythonVersion@0
+            displayName: 'Set Python 3.11'
+            inputs:
+              versionSpec: '3.11'
+
+          - script: |
+              cd shared/
+              pip install -r requirements.txt
+              pip install pytest pytest-cov
+              pytest tests/ --cov=. --cov-report=xml --cov-report=html
+            displayName: 'Install Dependencies & Run Tests'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/test-results.xml'
+              mergeTestResults: true
+
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish Code Coverage'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/shared/coverage.xml'
+
+  # ============================================================
+  # Stage 2: Build All Microservices in Parallel
+  # ============================================================
+  - stage: BuildServices
+    displayName: 'Build Microservices'
+    dependsOn: BuildShared
+    jobs:
+      # Auth Service
+      - job: BuildAuthService
+        displayName: 'Build Auth Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'auth-service'
+              servicePort: 8001
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Core ERP Service
+      - job: BuildCoreERPService
+        displayName: 'Build Core ERP Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'core-erp-service'
+              servicePort: 8002
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Accounting Service
+      - job: BuildAccountingService
+        displayName: 'Build Accounting Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'accounting-service'
+              servicePort: 8003
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Inventory Service
+      - job: BuildInventoryService
+        displayName: 'Build Inventory Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'inventory-service'
+              servicePort: 8004
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # CRM Service
+      - job: BuildCRMService
+        displayName: 'Build CRM Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'crm-service'
+              servicePort: 8005
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # HR Service
+      - job: BuildHRService
+        displayName: 'Build HR Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'hr-service'
+              servicePort: 8006
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Sales Service
+      - job: BuildSalesService
+        displayName: 'Build Sales Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'sales-service'
+              servicePort: 8007
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Reporting Service
+      - job: BuildReportingService
+        displayName: 'Build Reporting Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'reporting-service'
+              servicePort: 8008
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Workflow Service
+      - job: BuildWorkflowService
+        displayName: 'Build Workflow Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'workflow-service'
+              servicePort: 8009
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # Notification Service
+      - job: BuildNotificationService
+        displayName: 'Build Notification Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'notification-service'
+              servicePort: 8010
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+      # File Storage Service
+      - job: BuildFileStorageService
+        displayName: 'Build File Storage Service'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: templates/build-microservice.yml
+            parameters:
+              serviceName: 'file-storage-service'
+              servicePort: 8011
+              harborRegistry: $(harborRegistry)
+              harborProject: $(harborProject)
+
+  # ============================================================
+  # Stage 3: Security Scanning
+  # ============================================================
+  - stage: SecurityScan
+    displayName: 'Security & Vulnerability Scanning'
+    dependsOn: BuildServices
+    jobs:
+      - job: TrivyScan
+        displayName: 'Trivy Container Scanning'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              # Install Trivy
+              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+              echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+              sudo apt-get update
+              sudo apt-get install trivy -y
+
+              # Scan all microservices
+              for service in auth-service core-erp-service accounting-service inventory-service crm-service hr-service sales-service reporting-service workflow-service notification-service file-storage-service; do
+                echo "Scanning $service..."
+                trivy image --severity HIGH,CRITICAL $(harborRegistry)/$(harborProject)/$service:$(Build.BuildId)
+              done
+            displayName: 'Scan All Microservices'
+
+      - job: SonarQubeScan
+        displayName: 'SonarQube Code Analysis'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: SonarQubePrepare@5
+            displayName: 'Prepare SonarQube Analysis'
+            inputs:
+              SonarQube: 'sonarqube-connection'
+              scannerMode: 'CLI'
+              configMode: 'manual'
+              cliProjectKey: 'odoo-microservices'
+              cliProjectName: 'Odoo Microservices'
+              cliSources: 'microservices,shared'
+
+          - task: SonarQubeAnalyze@5
+            displayName: 'Run SonarQube Analysis'
+
+          - task: SonarQubePublish@5
+            displayName: 'Publish SonarQube Results'
+            inputs:
+              pollingTimeoutSec: '300'
+
+  # ============================================================
+  # Stage 4: Deploy to Development
+  # ============================================================
+  - stage: DeployDev
+    displayName: 'Deploy to Development'
+    dependsOn: SecurityScan
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq(variables['Build.SourceBranch'], 'refs/heads/Odoo-19.0-microservices')))
+    jobs:
+      - deployment: DeployToDev
+        displayName: 'Deploy All Services to Dev'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'odoo-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: KubernetesManifest@0
+                  displayName: 'Create Namespace'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-dev-connection'
+                    namespace: 'odoo-dev'
+                    manifests: '$(Build.SourcesDirectory)/k8s/base/namespace.yaml'
+
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy ConfigMaps & Secrets'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-dev-connection'
+                    namespace: 'odoo-dev'
+                    manifests: |
+                      $(Build.SourcesDirectory)/k8s/base/configmap.yaml
+                      $(Build.SourcesDirectory)/k8s/base/secrets.yaml
+
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy Database Layer'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-dev-connection'
+                    namespace: 'odoo-dev'
+                    manifests: '$(Build.SourcesDirectory)/k8s/base/postgres-deployment.yaml'
+
+                - task: Bash@3
+                  displayName: 'Wait for Database Ready'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      kubectl wait --for=condition=ready pod -l app=postgres -n odoo-dev --timeout=300s
+
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy All Microservices'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-dev-connection'
+                    namespace: 'odoo-dev'
+                    manifests: '$(Build.SourcesDirectory)/k8s/overlays/dev/*.yaml'
+                    imagePullSecrets: 'harbor-registry-secret'
+
+                - task: Bash@3
+                  displayName: 'Health Check All Services'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      services=(auth-service core-erp-service accounting-service inventory-service crm-service hr-service sales-service reporting-service workflow-service notification-service file-storage-service)
+                      
+                      for service in "${services[@]}"; do
+                        echo "Checking $service..."
+                        kubectl rollout status deployment/$service -n odoo-dev --timeout=5m
+                      done
+
+                - task: Bash@3
+                  displayName: 'Run Integration Tests'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      cd $(Build.SourcesDirectory)/tests/integration
+                      pip install -r requirements.txt
+                      pytest --env=dev --verbose
+
+  # ============================================================
+  # Stage 5: Deploy to Staging
+  # ============================================================
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging'
+    dependsOn: DeployDev
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/release/*'))
+    jobs:
+      - deployment: DeployToStaging
+        displayName: 'Deploy All Services to Staging'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'odoo-staging'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy to Staging'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-staging-connection'
+                    namespace: 'odoo-staging'
+                    manifests: '$(Build.SourcesDirectory)/k8s/overlays/staging/*.yaml'
+
+                - task: Bash@3
+                  displayName: 'Run E2E Tests'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      cd $(Build.SourcesDirectory)/tests/e2e
+                      pip install -r requirements.txt
+                      pytest --env=staging --verbose --html=report.html
+
+                - task: PublishTestResults@2
+                  displayName: 'Publish E2E Test Results'
+                  inputs:
+                    testResultsFormat: 'JUnit'
+                    testResultsFiles: '**/test-results-*.xml'
+
+  # ============================================================
+  # Stage 6: Deploy to Production (Manual Approval)
+  # ============================================================
+  - stage: DeployProduction
+    displayName: 'Deploy to Production'
+    dependsOn: DeployStaging
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToProd
+        displayName: 'Deploy All Services to Production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'odoo-production'  # Requires manual approval in Azure DevOps
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: Bash@3
+                  displayName: 'Backup Production Databases'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      # Create backup job
+                      kubectl create job --from=cronjob/postgres-backup manual-backup-$(Build.BuildId) -n odoo-prod
+                      kubectl wait --for=condition=complete job/manual-backup-$(Build.BuildId) -n odoo-prod --timeout=10m
+
+                - task: KubernetesManifest@0
+                  displayName: 'Deploy to Production (Blue-Green)'
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-prod-connection'
+                    namespace: 'odoo-prod'
+                    manifests: '$(Build.SourcesDirectory)/k8s/overlays/production/*.yaml'
+                    strategy: 'blue-green'
+                    trafficSplitMethod: 'pod'
+                    percentage: 100
+
+                - task: Bash@3
+                  displayName: 'Smoke Tests'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      cd $(Build.SourcesDirectory)/tests/smoke
+                      pip install -r requirements.txt
+                      pytest --env=production --verbose
+
+                - task: Bash@3
+                  displayName: 'Monitor Rollout'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      # Monitor for 5 minutes
+                      timeout 300 kubectl logs -f deployment/odoo-gateway -n odoo-prod || true
+
+  # ============================================================
+  # Stage 7: Post-Deployment Validation
+  # ============================================================
+  - stage: PostDeployment
+    displayName: 'Post-Deployment Tasks'
+    dependsOn: DeployProduction
+    jobs:
+      - job: ValidationTests
+        displayName: 'Run Validation Tests'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            displayName: 'API Health Checks'
+            inputs:
+              targetType: 'inline'
+              script: |
+                services=(auth-service core-erp-service accounting-service inventory-service crm-service hr-service sales-service reporting-service workflow-service notification-service file-storage-service)
+                
+                for service in "${services[@]}"; do
+                  echo "Testing $service API..."
+                  curl -f https://api.odoo.production/$service/health || exit 1
+                done
+
+          - task: Bash@3
+            displayName: 'Performance Benchmarks'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Run load tests
+                pip install locust
+                cd $(Build.SourcesDirectory)/tests/performance
+                locust -f locustfile.py --headless -u 100 -r 10 --run-time 5m --host https://api.odoo.production
+
+      - job: NotifyStakeholders
+        displayName: 'Send Deployment Notifications'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            displayName: 'Send Slack Notification'
+            inputs:
+              targetType: 'inline'
+              script: |
+                curl -X POST -H 'Content-type: application/json' \
+                --data '{
+                  "text":"🚀 Production Deployment Successful!",
+                  "blocks":[
+                    {
+                      "type":"section",
+                      "text":{
+                        "type":"mrkdwn",
+                        "text":"*Odoo Microservices Deployment*\n✅ Build: $(Build.BuildNumber)\n✅ Branch: $(Build.SourceBranchName)\n✅ All 11 services deployed successfully"
+                      }
+                    }
+                  ]
+                }' \
+                $(SLACK_WEBHOOK_URL)
+
+          - task: Bash@3
+            displayName: 'Update Status Page'
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Update Statuspage.io or similar
+                curl -X POST https://api.statuspage.io/v1/pages/$(STATUS_PAGE_ID)/incidents \
+                  -H "Authorization: OAuth $(STATUS_PAGE_TOKEN)" \
+                  -d '{
+                    "incident": {
+                      "name": "Deployment Completed",
+                      "status": "resolved",
+                      "body": "New version deployed successfully"
+                    }
+                  }'

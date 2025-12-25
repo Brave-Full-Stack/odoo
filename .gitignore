@@ -57,3 +57,13 @@ CREDENTIALS.md
 .env
 .env.local
 .env.*.local
+.azure_devops.env
+azure-devops-setup/.env
+azure-devops-setup/.env.backup
+azure-devops-setup/**/.env*
+
+# Azure DevOps dashboards (can be regenerated)
+sprint-dashboard.html
+sprint-dashboard.md
+azure-devops-setup/sprint-dashboard.html
+azure-devops-setup/sprint-dashboard.md

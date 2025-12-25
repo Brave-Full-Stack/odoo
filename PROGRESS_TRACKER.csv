@@ -1,0 +1,299 @@
+Phase,Task ID,Task Name,Duration (Days),Priority,Status,Progress %,Started Date,Completed Date,Blockers,Notes
+Phase 0: Design,0.1.1,Documented 11 microservices,0.3,Critical,Not Started,0,,,,"List all services: auth, core-erp, accounting, inventory, crm, hr, sales, reporting, workflow, notification, file-storage"
+Phase 0: Design,0.1.2,Created service boundary diagram,0.3,Critical,Not Started,0,,,0.1.1,Visual diagram showing service boundaries
+Phase 0: Design,0.1.3,Defined service responsibilities,0.4,Critical,Not Started,0,,,0.1.1,Document what each service does
+Phase 0: Design,0.2.1,Designed auth-db schema,0.2,Critical,Not Started,0,,,,"Users, sessions, tokens tables"
+Phase 0: Design,0.2.2,Designed core-erp-db schema,0.2,Critical,Not Started,0,,,,"Partners, companies, users tables"
+Phase 0: Design,0.2.3,Designed accounting-db schema,0.2,Critical,Not Started,0,,,,"Invoices, payments, journals tables"
+Phase 0: Design,0.2.4,Designed inventory-db schema,0.2,Critical,Not Started,0,,,,"Products, stock, warehouses tables"
+Phase 0: Design,0.2.5,Designed crm-db schema,0.2,Critical,Not Started,0,,,,"Leads, opportunities, activities tables"
+Phase 0: Design,0.3.1,Chose REST for synchronous calls,0.3,High,Not Started,0,,,,Document REST API patterns
+Phase 0: Design,0.3.2,Chose RabbitMQ for async events,0.3,High,Not Started,0,,,,Document event-driven architecture
+Phase 0: Design,0.3.3,Defined event types list,0.4,High,Not Started,0,,,,"UserCreated, OrderPlaced, InvoiceGenerated, etc."
+Phase 0: Design,0.4.1,Created microservices/ directory,0.1,High,Not Started,0,,,,mkdir -p microservices/
+Phase 0: Design,0.4.2,Created subdirectories for all 11 services,0.2,High,Not Started,0,,,0.4.1,One directory per service
+Phase 0: Design,0.4.3,Created shared/ library directory,0.2,High,Not Started,0,,,0.4.1,For common code and utilities
+Phase 0: Design,0.5.1,Created auth-service OpenAPI spec,0.2,High,Not Started,0,,,,openapi.yaml for auth endpoints
+Phase 0: Design,0.5.2,Created core-erp OpenAPI spec,0.2,High,Not Started,0,,,,openapi.yaml for core-erp endpoints
+Phase 0: Design,0.5.3,Created accounting OpenAPI spec,0.2,High,Not Started,0,,,,openapi.yaml for accounting endpoints
+Phase 0: Design,0.5.4,Created inventory OpenAPI spec,0.2,High,Not Started,0,,,,openapi.yaml for inventory endpoints
+Phase 0: Design,0.5.5,Created crm OpenAPI spec,0.2,High,Not Started,0,,,,openapi.yaml for crm endpoints
+Phase 0: Design,0.6.1,Documented auth-service dependencies,0.1,Medium,Not Started,0,,,,No dependencies (base service)
+Phase 0: Design,0.6.2,Documented core-erp dependencies,0.1,Medium,Not Started,0,,,,Depends on auth-service
+Phase 0: Design,0.6.3,Documented accounting dependencies,0.1,Medium,Not Started,0,,,,Depends on auth-service and core-erp
+Phase 0: Design,0.6.4,Documented inventory dependencies,0.1,Medium,Not Started,0,,,,Depends on auth-service and core-erp
+Phase 0: Design,0.6.5,Created dependency diagram,0.1,Medium,Not Started,0,,,0.6.1-0.6.4,Visual service dependency graph
+Phase 1: Service Mesh,1.1.1,Downloaded Istio 1.20+,0.1,Critical,Not Started,0,,,,curl -L https://istio.io/downloadIstio
+Phase 1: Service Mesh,1.1.2,Installed istioctl CLI,0.1,Critical,Not Started,0,,,1.1.1,Add istioctl to PATH
+Phase 1: Service Mesh,1.1.3,Ran istio install --set profile=demo,0.2,Critical,Not Started,0,,,1.1.2,Install Istio on cluster
+Phase 1: Service Mesh,1.1.4,Verified installation with kubectl,0.1,Critical,Not Started,0,,,1.1.3,Check pods in istio-system namespace
+Phase 1: Service Mesh,1.2.1,Installed Prometheus,0.1,High,Not Started,0,,,1.1.4,kubectl apply -f prometheus.yaml
+Phase 1: Service Mesh,1.2.2,Installed Grafana,0.1,High,Not Started,0,,,1.1.4,kubectl apply -f grafana.yaml
+Phase 1: Service Mesh,1.2.3,Installed Jaeger,0.1,High,Not Started,0,,,1.1.4,kubectl apply -f jaeger.yaml
+Phase 1: Service Mesh,1.2.4,Installed Kiali,0.1,High,Not Started,0,,,1.1.4,kubectl apply -f kiali.yaml
+Phase 1: Service Mesh,1.2.5,Accessed Kiali dashboard,0.1,High,Not Started,0,,,1.2.4,istioctl dashboard kiali
+Phase 1: Service Mesh,1.3.1,Created VirtualService for auth,0.25,High,Not Started,0,,,1.1.4,Route /api/v1/auth to auth-service
+Phase 1: Service Mesh,1.3.2,Created VirtualService for core-erp,0.25,High,Not Started,0,,,1.1.4,Route /api/v1/core to core-erp-service
+Phase 1: Service Mesh,1.3.3,Created VirtualService for accounting,0.25,High,Not Started,0,,,1.1.4,Route /api/v1/accounting to accounting-service
+Phase 1: Service Mesh,1.3.4,Created Gateway configuration,0.25,High,Not Started,0,,,1.1.4,Define ingress gateway
+Phase 1: Service Mesh,1.4.1,Created DestinationRule for circuit breakers,0.3,High,Not Started,0,,,1.3.4,Configure outlier detection
+Phase 1: Service Mesh,1.4.2,Configured retry policies,0.3,High,Not Started,0,,,1.3.4,Set retry attempts and timeouts
+Phase 1: Service Mesh,1.4.3,Configured timeout policies,0.4,High,Not Started,0,,,1.3.4,Set request timeouts
+Phase 1: Service Mesh,1.5.1,Enabled strict mTLS,0.2,Critical,Not Started,0,,,1.1.4,PeerAuthentication policy
+Phase 1: Service Mesh,1.5.2,Verified mTLS is working,0.2,Critical,Not Started,0,,,1.5.1,Check certificate exchange
+Phase 1: Service Mesh,1.5.3,Tested service-to-service encryption,0.1,Critical,Not Started,0,,,1.5.2,Verify encrypted traffic
+Phase 1: Service Mesh,1.6.1,Deployed test services,0.2,High,Not Started,0,,,1.1.4,Deploy sample apps
+Phase 1: Service Mesh,1.6.2,Verified routing works,0.2,High,Not Started,0,,,1.6.1,Test HTTP requests
+Phase 1: Service Mesh,1.6.3,Checked Kiali for service topology,0.1,High,Not Started,0,,,1.6.2,Visualize service mesh
+Phase 2: Core Services,2.1.1,Created FastAPI app structure for auth-service,0.2,Critical,Not Started,0,,,,"main.py, routers/, models/, etc."
+Phase 2: Core Services,2.1.2,Implemented JWT authentication,0.4,Critical,Not Started,0,,,2.1.1,JWT token generation and validation
+Phase 2: Core Services,2.1.3,Implemented OAuth2 login endpoint,0.4,Critical,Not Started,0,,,2.1.2,/api/v1/auth/login endpoint
+Phase 2: Core Services,2.1.4,Created auth-db PostgreSQL,0.2,Critical,Not Started,0,,,2.1.3,Docker container or RDS
+Phase 2: Core Services,2.1.5,Ran database migrations,0.2,Critical,Not Started,0,,,2.1.4,Alembic migrations for auth tables
+Phase 2: Core Services,2.1.6,Created Dockerfile,0.2,Critical,Not Started,0,,,2.1.5,Multi-stage build for auth-service
+Phase 2: Core Services,2.1.7,Built Docker image,0.1,Critical,Not Started,0,,,2.1.6,docker build -t auth-service
+Phase 2: Core Services,2.1.8,Tested locally with curl,0.2,Critical,Not Started,0,,,2.1.7,Test login endpoint
+Phase 2: Core Services,2.1.9,Added to docker-compose.yml,0.1,Critical,Not Started,0,,,2.1.8,Define auth-service in compose file
+Phase 2: Core Services,2.2.1,Created FastAPI app structure for core-erp,0.2,Critical,Not Started,0,,,2.1.9,"main.py, routers/, models/"
+Phase 2: Core Services,2.2.2,Implemented partner management,0.4,Critical,Not Started,0,,,2.2.1,CRUD for res.partner
+Phase 2: Core Services,2.2.3,Implemented company management,0.4,Critical,Not Started,0,,,2.2.1,CRUD for res.company
+Phase 2: Core Services,2.2.4,Implemented user management,0.4,Critical,Not Started,0,,,2.2.1,CRUD for res.users
+Phase 2: Core Services,2.2.5,Created core-erp-db PostgreSQL,0.2,Critical,Not Started,0,,,2.2.4,Docker container or RDS
+Phase 2: Core Services,2.2.6,Ran database migrations,0.2,Critical,Not Started,0,,,2.2.5,Alembic migrations for core tables
+Phase 2: Core Services,2.2.7,Created Dockerfile,0.1,Critical,Not Started,0,,,2.2.6,Multi-stage build
+Phase 2: Core Services,2.2.8,Built Docker image,0.1,Critical,Not Started,0,,,2.2.7,docker build -t core-erp-service
+Phase 2: Core Services,2.2.9,Integrated with auth-service,0.2,Critical,Not Started,0,,,"2.2.8,2.1.9",JWT validation middleware
+Phase 2: Core Services,2.3.1,Created FastAPI app structure for accounting,0.2,High,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Phase 2: Core Services,2.3.2,Implemented invoice endpoints,0.5,High,Not Started,0,,,2.3.1,CRUD for account.invoice
+Phase 2: Core Services,2.3.3,Implemented payment endpoints,0.4,High,Not Started,0,,,2.3.1,CRUD for account.payment
+Phase 2: Core Services,2.3.4,Implemented journal entries,0.4,High,Not Started,0,,,2.3.1,CRUD for account.move
+Phase 2: Core Services,2.3.5,Created accounting-db PostgreSQL,0.2,High,Not Started,0,,,2.3.4,Docker container or RDS
+Phase 2: Core Services,2.3.6,Ran database migrations,0.2,High,Not Started,0,,,2.3.5,Alembic migrations
+Phase 2: Core Services,2.3.7,Created Dockerfile,0.1,High,Not Started,0,,,2.3.6,Multi-stage build
+Phase 2: Core Services,2.3.8,Built Docker image,0.1,High,Not Started,0,,,2.3.7,docker build -t accounting-service
+Phase 2: Core Services,2.3.9,Connected to event bus,0.2,High,Not Started,0,,,2.3.8,RabbitMQ publisher/consumer
+Phase 2: Core Services,2.4.1,Created FastAPI app structure for inventory,0.2,High,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Phase 2: Core Services,2.4.2,Implemented product endpoints,0.4,High,Not Started,0,,,2.4.1,CRUD for product.product
+Phase 2: Core Services,2.4.3,Implemented stock management,0.5,High,Not Started,0,,,2.4.1,Stock moves and quantities
+Phase 2: Core Services,2.4.4,Implemented warehouse endpoints,0.4,High,Not Started,0,,,2.4.1,CRUD for stock.warehouse
+Phase 2: Core Services,2.4.5,Created inventory-db PostgreSQL,0.2,High,Not Started,0,,,2.4.4,Docker container or RDS
+Phase 2: Core Services,2.4.6,Ran database migrations,0.2,High,Not Started,0,,,2.4.5,Alembic migrations
+Phase 2: Core Services,2.4.7,Created Dockerfile,0.1,High,Not Started,0,,,2.4.6,Multi-stage build
+Phase 2: Core Services,2.4.8,Built Docker image,0.1,High,Not Started,0,,,2.4.7,docker build -t inventory-service
+Phase 2: Core Services,2.4.9,Connected to event bus,0.2,High,Not Started,0,,,2.4.8,RabbitMQ for inventory events
+Phase 2: Core Services,2.5.1,Created FastAPI app structure for CRM,0.2,Medium,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Phase 2: Core Services,2.5.2,Implemented lead endpoints,0.4,Medium,Not Started,0,,,2.5.1,CRUD for crm.lead
+Phase 2: Core Services,2.5.3,Implemented opportunity endpoints,0.4,Medium,Not Started,0,,,2.5.1,CRUD for crm.opportunity
+Phase 2: Core Services,2.5.4,Implemented pipeline views,0.3,Medium,Not Started,0,,,2.5.1,Kanban/pipeline visualization
+Phase 2: Core Services,2.5.5,Created crm-db PostgreSQL,0.2,Medium,Not Started,0,,,2.5.4,Docker container or RDS
+Phase 2: Core Services,2.5.6,Ran database migrations,0.2,Medium,Not Started,0,,,2.5.5,Alembic migrations
+Phase 2: Core Services,2.5.7,Created Dockerfile,0.1,Medium,Not Started,0,,,2.5.6,Multi-stage build
+Phase 2: Core Services,2.5.8,Built Docker image,0.1,Medium,Not Started,0,,,2.5.7,docker build -t crm-service
+Phase 3: Event Bus,3.1.1,Installed RabbitMQ container,0.2,Critical,Not Started,0,,,,docker run -d rabbitmq:management
+Phase 3: Event Bus,3.1.2,Configured management UI,0.1,Critical,Not Started,0,,,3.1.1,Access http://localhost:15672
+Phase 3: Event Bus,3.1.3,Created exchanges and queues,0.1,Critical,Not Started,0,,,3.1.2,Define event exchanges
+Phase 3: Event Bus,3.1.4,Tested connection,0.1,Critical,Not Started,0,,,3.1.3,Test publish/consume
+Phase 3: Event Bus,3.2.1,Defined UserCreated event,0.2,High,Not Started,0,,,,"Event schema with user_id, username, email"
+Phase 3: Event Bus,3.2.2,Defined OrderPlaced event,0.2,High,Not Started,0,,,,"Event schema with order_id, customer_id, items"
+Phase 3: Event Bus,3.2.3,Defined InvoiceGenerated event,0.2,High,Not Started,0,,,,"Event schema with invoice_id, amount, customer_id"
+Phase 3: Event Bus,3.2.4,Defined InventoryUpdated event,0.2,High,Not Started,0,,,,"Event schema with product_id, quantity, warehouse_id"
+Phase 3: Event Bus,3.2.5,Defined PaymentReceived event,0.2,High,Not Started,0,,,,"Event schema with payment_id, amount, invoice_id"
+Phase 3: Event Bus,3.3.1,Implemented publisher in auth-service,0.3,High,Not Started,0,,,"3.1.4,3.2.1",Publish UserCreated events
+Phase 3: Event Bus,3.3.2,Implemented publisher in accounting-service,0.3,High,Not Started,0,,,"3.1.4,3.2.3",Publish InvoiceGenerated events
+Phase 3: Event Bus,3.3.3,Implemented publisher in inventory-service,0.3,High,Not Started,0,,,"3.1.4,3.2.4",Publish InventoryUpdated events
+Phase 3: Event Bus,3.3.4,Tested event publishing,0.1,High,Not Started,0,,,3.3.1-3.3.3,Verify events in RabbitMQ
+Phase 3: Event Bus,3.4.1,Implemented consumer in accounting-service,0.3,High,Not Started,0,,,3.1.4,Consume PaymentReceived events
+Phase 3: Event Bus,3.4.2,Implemented consumer in inventory-service,0.3,High,Not Started,0,,,3.1.4,Consume OrderPlaced events
+Phase 3: Event Bus,3.4.3,Implemented consumer in notification-service,0.3,High,Not Started,0,,,3.1.4,Consume all notification events
+Phase 3: Event Bus,3.4.4,Tested event consumption,0.1,High,Not Started,0,,,3.4.1-3.4.3,Verify event processing
+Phase 3: Event Bus,3.5.1,End-to-end event flow test,0.2,High,Not Started,0,,,"3.3.4,3.4.4",Test complete event cycle
+Phase 3: Event Bus,3.5.2,Checked RabbitMQ logs,0.1,High,Not Started,0,,,3.5.1,Verify no errors
+Phase 3: Event Bus,3.5.3,Verified event delivery,0.2,High,Not Started,0,,,3.5.1,Confirm all events delivered
+Phase 4: Observability,4.1.1,Installed Prometheus,0.1,Critical,Not Started,0,,,,kubectl apply or docker run
+Phase 4: Observability,4.1.2,Configured service discovery,0.2,Critical,Not Started,0,,,4.1.1,Configure scrape targets
+Phase 4: Observability,4.1.3,Added scrape configs for all services,0.1,Critical,Not Started,0,,,4.1.2,One config per service
+Phase 4: Observability,4.1.4,Tested metrics collection,0.1,Critical,Not Started,0,,,4.1.3,Query Prometheus UI
+Phase 4: Observability,4.2.1,Installed Grafana,0.1,High,Not Started,0,,,4.1.1,kubectl apply or docker run
+Phase 4: Observability,4.2.2,Connected to Prometheus,0.1,High,Not Started,0,,,"4.2.1,4.1.4",Add Prometheus data source
+Phase 4: Observability,4.2.3,Created auth-service dashboard,0.2,High,Not Started,0,,,4.2.2,"Request rate, latency, errors"
+Phase 4: Observability,4.2.4,Created accounting-service dashboard,0.2,High,Not Started,0,,,4.2.2,Business metrics dashboard
+Phase 4: Observability,4.2.5,Created inventory-service dashboard,0.2,High,Not Started,0,,,4.2.2,Stock metrics dashboard
+Phase 4: Observability,4.2.6,Set up alert rules,0.2,High,Not Started,0,,,4.2.3-4.2.5,"High error rate, latency alerts"
+Phase 4: Observability,4.3.1,Installed Jaeger,0.1,High,Not Started,0,,,,kubectl apply or docker run
+Phase 4: Observability,4.3.2,Configured tracing endpoints,0.2,High,Not Started,0,,,4.3.1,Configure collector endpoints
+Phase 4: Observability,4.3.3,Tested trace collection,0.2,High,Not Started,0,,,4.3.2,View traces in Jaeger UI
+Phase 4: Observability,4.4.1,Added OpenTelemetry to auth-service,0.3,High,Not Started,0,,,4.3.3,Instrument with OTel SDK
+Phase 4: Observability,4.4.2,Added OpenTelemetry to core-erp,0.3,High,Not Started,0,,,4.3.3,Instrument with OTel SDK
+Phase 4: Observability,4.4.3,Added OpenTelemetry to accounting,0.2,High,Not Started,0,,,4.3.3,Instrument with OTel SDK
+Phase 4: Observability,4.4.4,Verified distributed traces,0.2,High,Not Started,0,,,4.4.1-4.4.3,Trace cross-service requests
+Phase 4: Observability,4.5.1,Installed Fluentd,0.2,Medium,Not Started,0,,,,Log collector/forwarder
+Phase 4: Observability,4.5.2,Installed Elasticsearch,0.2,Medium,Not Started,0,,,4.5.1,Log storage backend
+Phase 4: Observability,4.5.3,Installed Kibana,0.2,Medium,Not Started,0,,,4.5.2,Log visualization UI
+Phase 4: Observability,4.5.4,Configured log aggregation,0.2,Medium,Not Started,0,,,4.5.3,Fluentd → ES pipeline
+Phase 4: Observability,4.5.5,Created log dashboards,0.2,Medium,Not Started,0,,,4.5.4,Kibana dashboards for logs
+Phase 5: API Gateway,5.1.1,Installed Kong API Gateway,0.2,Critical,Not Started,0,,,,Docker or Kubernetes deployment
+Phase 5: API Gateway,5.1.2,Configured Kong Admin API,0.1,Critical,Not Started,0,,,5.1.1,Access Kong admin interface
+Phase 5: API Gateway,5.1.3,Created service routes,0.2,Critical,Not Started,0,,,5.1.2,Define routes for all services
+Phase 5: API Gateway,5.2.1,Installed OAuth2 plugin,0.2,Critical,Not Started,0,,,5.1.3,Kong OAuth2 plugin
+Phase 5: API Gateway,5.2.2,Configured with auth-service,0.5,Critical,Not Started,0,,,"5.2.1,2.1.9",Integrate JWT validation
+Phase 5: API Gateway,5.2.3,Tested token validation,0.3,Critical,Not Started,0,,,5.2.2,Test with valid/invalid tokens
+Phase 5: API Gateway,5.3.1,Configured rate limits per service,0.2,High,Not Started,0,,,5.1.3,Different limits per endpoint
+Phase 5: API Gateway,5.3.2,Tested rate limiting,0.2,High,Not Started,0,,,5.3.1,Exceed limits to trigger 429
+Phase 5: API Gateway,5.3.3,Set up different tiers,0.1,High,Not Started,0,,,5.3.1,Free/paid user limits
+Phase 5: API Gateway,5.4.1,Enabled CORS,0.1,High,Not Started,0,,,5.1.3,Enable CORS plugin
+Phase 5: API Gateway,5.4.2,Configured allowed origins,0.2,High,Not Started,0,,,5.4.1,Set origin whitelist
+Phase 5: API Gateway,5.4.3,Tested CORS headers,0.2,High,Not Started,0,,,5.4.2,Verify CORS responses
+Phase 5: API Gateway,5.5.1,Set up Kong Dev Portal,0.2,Medium,Not Started,0,,,5.1.3,Enable developer portal
+Phase 5: API Gateway,5.5.2,Uploaded OpenAPI specs,0.2,Medium,Not Started,0,,,5.5.1,Upload all service specs
+Phase 5: API Gateway,5.5.3,Published documentation,0.1,Medium,Not Started,0,,,5.5.2,Make API docs public
+Phase 5: API Gateway,5.6.1,Installed Locust,0.1,High,Not Started,0,,,,pip install locust
+Phase 5: API Gateway,5.6.2,Created load test scenarios,0.3,High,Not Started,0,,,5.6.1,Write test scripts
+Phase 5: API Gateway,5.6.3,Ran performance tests,0.3,High,Not Started,0,,,5.6.2,Execute load tests
+Phase 5: API Gateway,5.6.4,Analyzed results,0.3,High,Not Started,0,,,5.6.3,Review metrics and bottlenecks
+Phase 6: Container Registry,6.1.1,Installed Harbor,0.2,High,Not Started,0,,,,Docker or Helm deployment
+Phase 6: Container Registry,6.1.2,Configured HTTPS,0.2,High,Not Started,0,,,6.1.1,SSL/TLS certificates
+Phase 6: Container Registry,6.1.3,Created project repositories,0.1,High,Not Started,0,,,6.1.2,One project per service
+Phase 6: Container Registry,6.2.1,Enabled Trivy scanner,0.1,High,Not Started,0,,,6.1.3,Enable vulnerability scanning
+Phase 6: Container Registry,6.2.2,Scanned all images,0.2,High,Not Started,0,,,6.2.1,Scan existing images
+Phase 6: Container Registry,6.2.3,Fixed critical vulnerabilities,0.2,High,Not Started,0,,,6.2.2,Patch vulnerable dependencies
+Phase 6: Container Registry,6.3.1,Configured replication rules,0.2,Medium,Not Started,0,,,6.1.3,Define replication policies
+Phase 6: Container Registry,6.3.2,Set up multi-region replication,0.2,Medium,Not Started,0,,,6.3.1,Replicate to multiple regions
+Phase 6: Container Registry,6.3.3,Tested replication,0.1,Medium,Not Started,0,,,6.3.2,Verify image replication
+Phase 6: Container Registry,6.4.1,Pushed auth-service image,0.1,High,Not Started,0,,,"6.1.3,2.1.7",Tag and push
+Phase 6: Container Registry,6.4.2,Pushed core-erp image,0.1,High,Not Started,0,,,"6.1.3,2.2.8",Tag and push
+Phase 6: Container Registry,6.4.3,Pushed accounting image,0.1,High,Not Started,0,,,"6.1.3,2.3.8",Tag and push
+Phase 6: Container Registry,6.4.4,Pushed inventory image,0.1,High,Not Started,0,,,"6.1.3,2.4.8",Tag and push
+Phase 6: Container Registry,6.4.5,Pushed crm image,0.1,High,Not Started,0,,,"6.1.3,2.5.8",Tag and push
+Phase 7: GitOps,7.1.1,Installed ArgoCD,0.2,Critical,Not Started,0,,,,kubectl apply or Helm install
+Phase 7: GitOps,7.1.2,Accessed ArgoCD UI,0.1,Critical,Not Started,0,,,7.1.1,kubectl port-forward
+Phase 7: GitOps,7.1.3,Changed admin password,0.1,Critical,Not Started,0,,,7.1.2,Update default password
+Phase 7: GitOps,7.2.1,Created k8s-manifests repo,0.1,High,Not Started,0,,,,Git repository for manifests
+Phase 7: GitOps,7.2.2,Organized by environment,0.2,High,Not Started,0,,,7.2.1,"dev/, staging/, prod/ folders"
+Phase 7: GitOps,7.2.3,Created kustomization files,0.2,High,Not Started,0,,,7.2.2,kustomization.yaml per env
+Phase 7: GitOps,7.3.1,Created ArgoCD app for auth-service,0.2,High,Not Started,0,,,"7.1.3,7.2.3",Application manifest
+Phase 7: GitOps,7.3.2,Created ArgoCD app for core-erp,0.2,High,Not Started,0,,,"7.1.3,7.2.3",Application manifest
+Phase 7: GitOps,7.3.3,Created ArgoCD app for accounting,0.2,High,Not Started,0,,,"7.1.3,7.2.3",Application manifest
+Phase 7: GitOps,7.3.4,Created ArgoCD app for inventory,0.2,High,Not Started,0,,,"7.1.3,7.2.3",Application manifest
+Phase 7: GitOps,7.4.1,Enabled auto-sync,0.1,High,Not Started,0,,,7.3.1-7.3.4,Automatic synchronization
+Phase 7: GitOps,7.4.2,Configured pruning,0.2,High,Not Started,0,,,7.4.1,Delete removed resources
+Phase 7: GitOps,7.4.3,Set up self-heal,0.2,High,Not Started,0,,,7.4.1,Auto-correct drift
+Phase 7: GitOps,7.5.1,Created dev environment,0.2,Medium,Not Started,0,,,7.2.3,Dev cluster config
+Phase 7: GitOps,7.5.2,Created staging environment,0.2,Medium,Not Started,0,,,7.2.3,Staging cluster config
+Phase 7: GitOps,7.5.3,Created prod environment,0.1,Medium,Not Started,0,,,7.2.3,Prod cluster config
+Phase 8: CI/CD,8.1.1,Created workflow file,0.2,Critical,Not Started,0,,,,.github/workflows/microservices.yml
+Phase 8: CI/CD,8.1.2,Configured multi-service build,0.2,Critical,Not Started,0,,,8.1.1,Matrix build strategy
+Phase 8: CI/CD,8.1.3,Tested build pipeline,0.1,Critical,Not Started,0,,,8.1.2,Trigger workflow and verify
+Phase 8: CI/CD,8.2.1,Added unit test step,0.2,High,Not Started,0,,,8.1.3,Run pytest for each service
+Phase 8: CI/CD,8.2.2,Added integration test step,0.2,High,Not Started,0,,,8.1.3,Test service interactions
+Phase 8: CI/CD,8.2.3,Configured test reporting,0.1,High,Not Started,0,,,8.2.1-8.2.2,Publish test results
+Phase 8: CI/CD,8.3.1,Integrated Trivy scanning,0.2,High,Not Started,0,,,8.1.3,Scan Docker images
+Phase 8: CI/CD,8.3.2,Integrated SonarQube,0.2,High,Not Started,0,,,8.1.3,Code quality analysis
+Phase 8: CI/CD,8.3.3,Configured security gates,0.1,High,Not Started,0,,,8.3.1-8.3.2,Fail on critical issues
+Phase 8: CI/CD,8.4.1,Build images on merge,0.2,Critical,Not Started,0,,,8.1.3,Trigger on main branch
+Phase 8: CI/CD,8.4.2,Push to Harbor registry,0.1,Critical,Not Started,0,,,"8.4.1,6.1.3",Push with credentials
+Phase 8: CI/CD,8.4.3,Tag with version + SHA,0.2,Critical,Not Started,0,,,8.4.2,Semantic versioning
+Phase 8: CI/CD,8.5.1,Trigger ArgoCD sync after push,0.2,High,Not Started,0,,,"8.4.3,7.1.3",Update image tags
+Phase 8: CI/CD,8.5.2,Wait for deployment health,0.1,High,Not Started,0,,,8.5.1,Check rollout status
+Phase 8: CI/CD,8.5.3,Send notifications,0.2,High,Not Started,0,,,8.5.2,Slack/email notifications
+Phase 8: CI/CD,8.6.1,Configured auto-rollback,0.2,High,Not Started,0,,,8.5.2,Rollback on health check fail
+Phase 8: CI/CD,8.6.2,Tested rollback scenario,0.2,High,Not Started,0,,,8.6.1,Deploy bad version and verify rollback
+Phase 8: CI/CD,8.6.3,Documented rollback process,0.1,High,Not Started,0,,,8.6.2,Manual rollback procedures
+Phase 9: Cloud Infrastructure,9.1.1,Created/configured AWS account,0.1,Critical,Not Started,0,,,,AWS signup or existing account
+Phase 9: Cloud Infrastructure,9.1.2,Set up IAM roles,0.2,Critical,Not Started,0,,,9.1.1,"EKS service role, node role"
+Phase 9: Cloud Infrastructure,9.1.3,Configured billing alerts,0.2,Critical,Not Started,0,,,9.1.1,CloudWatch billing alarms
+Phase 9: Cloud Infrastructure,9.2.1,Created VPC with Terraform,0.3,Critical,Not Started,0,,,9.1.2,VPC CIDR block
+Phase 9: Cloud Infrastructure,9.2.2,Configured subnets,0.3,Critical,Not Started,0,,,9.2.1,Public and private subnets
+Phase 9: Cloud Infrastructure,9.2.3,Set up NAT Gateway,0.2,Critical,Not Started,0,,,9.2.2,For private subnet internet access
+Phase 9: Cloud Infrastructure,9.2.4,Configured security groups,0.2,Critical,Not Started,0,,,9.2.1,Firewall rules
+Phase 9: Cloud Infrastructure,9.3.1,Created EKS cluster with Terraform,0.4,Critical,Not Started,0,,,9.2.4,Kubernetes control plane
+Phase 9: Cloud Infrastructure,9.3.2,Configured 3-node node group,0.3,Critical,Not Started,0,,,9.3.1,Worker nodes
+Phase 9: Cloud Infrastructure,9.3.3,Installed cluster autoscaler,0.2,Critical,Not Started,0,,,9.3.2,Auto-scale nodes
+Phase 9: Cloud Infrastructure,9.3.4,Configured kubectl access,0.1,Critical,Not Started,0,,,9.3.1,Update kubeconfig
+Phase 9: Cloud Infrastructure,9.4.1,Created RDS instances for services,0.4,High,Not Started,0,,,9.2.4,PostgreSQL for each service
+Phase 9: Cloud Infrastructure,9.4.2,Configured Multi-AZ,0.2,High,Not Started,0,,,9.4.1,High availability
+Phase 9: Cloud Infrastructure,9.4.3,Set up automated backups,0.2,High,Not Started,0,,,9.4.1,Daily snapshots
+Phase 9: Cloud Infrastructure,9.4.4,Configured security groups,0.2,High,Not Started,0,,,9.4.1,Database firewall rules
+Phase 9: Cloud Infrastructure,9.5.1,Created Redis cluster,0.2,High,Not Started,0,,,9.2.4,ElastiCache Redis
+Phase 9: Cloud Infrastructure,9.5.2,Configured cluster mode,0.2,High,Not Started,0,,,9.5.1,Multi-node Redis
+Phase 9: Cloud Infrastructure,9.5.3,Set up security groups,0.1,High,Not Started,0,,,9.5.1,Redis access rules
+Phase 9: Cloud Infrastructure,9.6.1,Created S3 buckets for file storage,0.1,Medium,Not Started,0,,,9.1.1,File attachments bucket
+Phase 9: Cloud Infrastructure,9.6.2,Configured bucket policies,0.2,Medium,Not Started,0,,,9.6.1,IAM access policies
+Phase 9: Cloud Infrastructure,9.6.3,Enabled versioning,0.2,Medium,Not Started,0,,,9.6.1,Object versioning
+Phase 9: Cloud Infrastructure,9.7.1,Created Application Load Balancer,0.2,High,Not Started,0,,,9.3.4,ALB for ingress
+Phase 9: Cloud Infrastructure,9.7.2,Configured target groups,0.2,High,Not Started,0,,,9.7.1,Backend service targets
+Phase 9: Cloud Infrastructure,9.7.3,Set up health checks,0.1,High,Not Started,0,,,9.7.2,HTTP health endpoints
+Phase 9: Cloud Infrastructure,9.8.1,Configured DNS records,0.2,Medium,Not Started,0,,,9.7.1,Route53 A records
+Phase 9: Cloud Infrastructure,9.8.2,Set up SSL certificates,0.2,Medium,Not Started,0,,,9.8.1,ACM certificates
+Phase 9: Cloud Infrastructure,9.8.3,Configured HTTPS,0.1,Medium,Not Started,0,,,9.8.2,ALB HTTPS listener
+Phase 9: Cloud Infrastructure,9.9.1,Deployed all services to EKS,1,Critical,Not Started,0,,,"9.3.4,7.4.1",ArgoCD sync
+Phase 9: Cloud Infrastructure,9.9.2,Verified all pods running,0.5,Critical,Not Started,0,,,9.9.1,kubectl get pods
+Phase 9: Cloud Infrastructure,9.9.3,Checked service connectivity,0.5,Critical,Not Started,0,,,9.9.2,Test inter-service calls
+Phase 9: Cloud Infrastructure,9.10.1,Full system smoke test,0.4,Critical,Not Started,0,,,9.9.3,Test all endpoints
+Phase 9: Cloud Infrastructure,9.10.2,Load testing in production,0.3,Critical,Not Started,0,,,9.10.1,Run Locust tests
+Phase 9: Cloud Infrastructure,9.10.3,Security validation,0.3,Critical,Not Started,0,,,9.10.1,Penetration testing
+Testing & Validation,T.1,Unit Tests - All Services,Ongoing,High,Not Started,0,,,,Write unit tests for each service - maintain throughout
+Testing & Validation,T.2,Integration Tests,Ongoing,High,Not Started,0,,,,Test inter-service communication - maintain throughout
+Testing & Validation,T.3.1,Login workflow test,0.3,High,Not Started,0,,,Phase 9,User login → dashboard
+Testing & Validation,T.3.2,Invoice creation workflow test,0.3,High,Not Started,0,,,Phase 9,Create invoice → payment → reconciliation
+Testing & Validation,T.3.3,Inventory workflow test,0.4,High,Not Started,0,,,Phase 9,Product → stock move → availability
+Testing & Validation,T.4.1,Baseline performance test,0.3,High,Not Started,0,,,Phase 9,Establish baseline metrics
+Testing & Validation,T.4.2,Load test with 100 concurrent users,0.3,High,Not Started,0,,,T.4.1,Locust load test
+Testing & Validation,T.4.3,Stress test to find limits,0.4,High,Not Started,0,,,T.4.2,Push to breaking point
+Testing & Validation,T.5.1,API security scan,0.3,High,Not Started,0,,,Phase 5,OWASP API testing
+Testing & Validation,T.5.2,Network security audit,0.3,High,Not Started,0,,,Phase 9,Check firewall rules
+Testing & Validation,T.5.3,Penetration test,0.4,High,Not Started,0,,,Phase 9,External pen testing
+Final Validation,FV.1,Users can login via auth-service,0.1,Critical,Not Started,0,,,"2.1.9,5.2.3",End-to-end auth test
+Final Validation,FV.2,Can create partners in core-erp,0.1,Critical,Not Started,0,,,2.2.9,CRUD operations test
+Final Validation,FV.3,Can create invoices in accounting,0.1,Critical,Not Started,0,,,2.3.9,Invoice workflow test
+Final Validation,FV.4,Can manage products in inventory,0.1,Critical,Not Started,0,,,2.4.9,Product management test
+Final Validation,FV.5,All databases storing data,0.1,Critical,Not Started,0,,,Phase 2,Verify data persistence
+Final Validation,FV.6,Services communicate via REST,0.1,Critical,Not Started,0,,,Phase 2,Test REST endpoints
+Final Validation,FV.7,Events flowing through RabbitMQ,0.1,Critical,Not Started,0,,,3.5.3,Verify event bus
+Final Validation,FV.8,API Gateway routing correctly,0.1,Critical,Not Started,0,,,5.1.3,Test all routes
+Final Validation,FV.9,Prometheus collecting metrics,0.1,High,Not Started,0,,,4.1.4,Check metrics
+Final Validation,FV.10,Grafana showing dashboards,0.1,High,Not Started,0,,,4.2.6,View dashboards
+Final Validation,FV.11,Distributed tracing working,0.1,High,Not Started,0,,,4.4.4,Check traces
+Final Validation,FV.12,Istio mTLS enabled,0.1,High,Not Started,0,,,1.5.3,Verify mTLS
+Final Validation,FV.13,Services auto-restart on failure,0.1,High,Not Started,0,,,9.9.2,Kill pod and verify restart
+Final Validation,FV.14,Load balancer distributing traffic,0.1,High,Not Started,0,,,9.7.3,Check traffic distribution
+Final Validation,FV.15,All images in Harbor,0.1,High,Not Started,0,,,6.4.5,Verify all images pushed
+Final Validation,FV.16,Services deployed to Kubernetes,0.1,High,Not Started,0,,,9.9.2,Check all pods running
+Final Validation,FV.17,ArgoCD auto-syncing,0.1,High,Not Started,0,,,7.4.1,Test auto-sync
+Final Validation,FV.18,CI/CD pipeline working,0.1,High,Not Started,0,,,8.5.3,End-to-end pipeline test
+Final Validation,FV.19,Can rollback deployments,0.1,High,Not Started,0,,,8.6.3,Test rollback procedure
+Additional Services,A.1.1,Created FastAPI app structure for HR,0.2,Medium,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Additional Services,A.1.2,Implemented employee endpoints,0.5,Medium,Not Started,0,,,A.1.1,CRUD for hr.employee
+Additional Services,A.1.3,Implemented payroll endpoints,0.5,Medium,Not Started,0,,,A.1.1,Payroll processing
+Additional Services,A.1.4,Implemented attendance tracking,0.4,Medium,Not Started,0,,,A.1.1,Check-in/check-out
+Additional Services,A.1.5,Created hr-db PostgreSQL,0.2,Medium,Not Started,0,,,A.1.4,Database setup
+Additional Services,A.1.6,Created Dockerfile and deployed,0.4,Medium,Not Started,0,,,A.1.5,Containerize HR service
+Additional Services,A.2.1,Created FastAPI app structure for Sales,0.2,Medium,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Additional Services,A.2.2,Implemented order endpoints,0.5,Medium,Not Started,0,,,A.2.1,CRUD for sale.order
+Additional Services,A.2.3,Implemented quotation endpoints,0.5,Medium,Not Started,0,,,A.2.1,Sales quotations
+Additional Services,A.2.4,Implemented customer management,0.4,Medium,Not Started,0,,,A.2.1,Customer portal features
+Additional Services,A.2.5,Created sales-db PostgreSQL,0.2,Medium,Not Started,0,,,A.2.4,Database setup
+Additional Services,A.2.6,Created Dockerfile and deployed,0.4,Medium,Not Started,0,,,A.2.5,Containerize Sales service
+Additional Services,A.3.1,Created FastAPI app structure for Reporting,0.2,Medium,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Additional Services,A.3.2,Implemented analytics endpoints,0.5,Medium,Not Started,0,,,A.3.1,Business analytics API
+Additional Services,A.3.3,Implemented dashboard endpoints,0.5,Medium,Not Started,0,,,A.3.1,Dashboard data aggregation
+Additional Services,A.3.4,Implemented report generation,0.4,Medium,Not Started,0,,,A.3.1,PDF/Excel export
+Additional Services,A.3.5,Integrated with Pandas,0.2,Medium,Not Started,0,,,A.3.4,Data analysis library
+Additional Services,A.3.6,Created Dockerfile and deployed,0.4,Medium,Not Started,0,,,A.3.5,Containerize Reporting service
+Additional Services,A.4.1,Created FastAPI app structure for Notification,0.2,Medium,Not Started,0,,,2.1.9,"main.py, routers/, models/"
+Additional Services,A.4.2,Implemented email notification,0.4,Medium,Not Started,0,,,A.4.1,SMTP integration
+Additional Services,A.4.3,Implemented SMS notification,0.4,Medium,Not Started,0,,,A.4.1,Twilio/SMS provider
+Additional Services,A.4.4,Implemented push notification,0.3,Medium,Not Started,0,,,A.4.1,FCM/Push service
+Additional Services,A.4.5,Connected to event bus,0.2,Medium,Not Started,0,,,"A.4.4,3.1.4",Listen for notification events
+Additional Services,A.4.6,Created Dockerfile and deployed,0.2,Medium,Not Started,0,,,A.4.5,Containerize Notification service
+Additional Services,A.5.1,Created FastAPI app structure for File Storage,0.2,Medium,Not Started,0,,,2.1.9,"main.py, routers/, models/"
+Additional Services,A.5.2,Implemented file upload endpoints,0.4,Medium,Not Started,0,,,A.5.1,Multipart upload
+Additional Services,A.5.3,Implemented S3 integration,0.4,Medium,Not Started,0,,,A.5.2,AWS S3 or MinIO
+Additional Services,A.5.4,Implemented file retrieval,0.3,Medium,Not Started,0,,,A.5.3,Presigned URLs
+Additional Services,A.5.5,Implemented file deletion,0.2,Medium,Not Started,0,,,A.5.3,Cleanup endpoints
+Additional Services,A.5.6,Created Dockerfile and deployed,0.2,Medium,Not Started,0,,,A.5.5,Containerize File Storage service
+Additional Services,A.6.1,Created FastAPI app structure for Workflow,0.2,Medium,Not Started,0,,,2.2.9,"main.py, routers/, models/"
+Additional Services,A.6.2,Implemented cron job scheduler,0.5,Medium,Not Started,0,,,A.6.1,APScheduler or Celery Beat
+Additional Services,A.6.3,Implemented automation rules,0.5,Medium,Not Started,0,,,A.6.1,If-then automation
+Additional Services,A.6.4,Implemented workflow engine,0.4,Medium,Not Started,0,,,A.6.1,State machine workflow
+Additional Services,A.6.5,Integrated with all services,0.2,Medium,Not Started,0,,,A.6.4,Call other service APIs
+Additional Services,A.6.6,Created Dockerfile and deployed,0.4,Medium,Not Started,0,,,A.6.5,Containerize Workflow service
